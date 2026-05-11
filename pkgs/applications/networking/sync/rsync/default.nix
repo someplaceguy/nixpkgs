@@ -1,10 +1,10 @@
 {
   lib,
   stdenv,
-  fetchpatch,
   fetchurl,
   updateAutotoolsGnuConfigScriptsHook,
   perl,
+  python3,
   libiconv,
   zlib,
   popt,
@@ -23,28 +23,27 @@
 
 stdenv.mkDerivation rec {
   pname = "rsync";
-  version = "3.4.1";
+  version = "3.4.2";
 
   src = fetchurl {
     # signed with key 9FEF 112D CE19 A0DC 7E88  2CB8 1BB2 4997 A853 5F6F
     url = "mirror://samba/rsync/src/rsync-${version}.tar.gz";
-    hash = "sha256-KSS8s6Hti1UfwQH3QLnw/gogKxFQJ2R89phQ1l/YjFI=";
+    hash = "sha256-/xCqLBUc1LLbvmE1Em28hUBGET0t+0lXKjSCMyZ+sxU=";
   };
-
-  patches = [
-    # See: <https://github.com/RsyncProject/rsync/pull/790>
-    ./fix-tests-in-darwin-sandbox.patch
-    # fix compilation with gcc15
-    (fetchpatch {
-      url = "https://github.com/RsyncProject/rsync/commit/a4b926dcdce96b0f2cc0dc7744e95747b233500a.patch";
-      hash = "sha256-UiEQJ+p2gtIDYNJqnxx4qKgItKIZzCpkHnvsgoxBmSE=";
-    })
-  ];
 
   nativeBuildInputs = [
     updateAutotoolsGnuConfigScriptsHook
     perl
   ];
+
+  nativeCheckInputs = [
+    python3
+  ];
+
+  postPatch = ''
+    substituteInPlace runtests.py \
+      --replace-fail "/usr/bin/env python3" "${lib.getExe python3}"
+  '';
 
   buildInputs = [
     libiconv
